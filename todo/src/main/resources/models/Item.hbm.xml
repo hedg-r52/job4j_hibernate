@@ -1,0 +1,10 @@
+<hibernate-mapping xmlns="http://www.hibernate.org/xsd/hibernate-mapping">
+    <class name="models.Item" table="todo_items">
+        <id name="id" column="id" type="java.lang.Long">
+            <generator class="identity"/>
+        </id>
+        <property name="description" column="description"/>
+        <property name="created" column="created"/>
+        <property name="done" column="done"/>
+    </class>
+</hibernate-mapping>

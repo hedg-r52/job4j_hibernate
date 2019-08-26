@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en" xmlns="http://www.w3.org/1999/html">
+<head>
+    <!-- Required meta tags -->
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+
+    <!-- Bootstrap CSS -->
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.3.1/css/bootstrap.min.css"
+          integrity="sha384-ggOyR0iXCbMQv3Xipma34MD+dH/1fQ784/j6cY/iJTQUOhcWr7x9JvoRxT2MZw1T" crossorigin="anonymous">
+    <title>TO-DO List</title>
+</head>
+<!-- Optional JavaScript -->
+<!-- jQuery first, then Popper.js, then Bootstrap JS -->
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/popper.js/1.12.9/umd/popper.min.js"
+        integrity="sha384-ApNbgh9B+Y1QKtv3Rn7W3mgPxhU9K/ScQsAP7hUibX39j7fakFPskvXusvfa0b4Q"
+        crossorigin="anonymous"></script>
+<script src="https://maxcdn.bootstrapcdn.com/bootstrap/4.0.0/js/bootstrap.min.js"
+        integrity="sha384-JZR6Spejh4U02d8jOt6vLEHfe/JQGiRRSQQxSfFWpi1MquVdAyjUar5+76PVCmYl"
+        crossorigin="anonymous"></script>
+<script>
+    $(
+        function () {
+            update();
+            $("#description").on('keypress', function (e) {
+                if (e.which === 13) {
+                    add();
+                }
+            });
+        }
+    );
+    function formatDate(date) {
+        let d = date;
+        d = [
+            '0' + d.getDate(),
+            '0' + (d.getMonth() + 1),
+            '' + d.getFullYear(),
+            '0' + d.getHours(),
+            '0' + d.getMinutes(),
+            '0' + d.getSeconds()
+        ].map(component => component.slice(-2)); // take last 2 digits of every component
+        return d.slice(0, 3).join('.') + ' ' + d.slice(3).join(':');
+    }
+    function update() {
+        $.ajax("./ajax").done(
+            function (data) {
+                let table = '<tr>'
+                    + '<th style="width:70%">Описание</th>'
+                    + '<th style="width:20%">Дата создания</th>'
+                    + '<th style="width:5%">Выполнена</th>'
+                    + '<th style="width:5%"></th>'
+                    + '</tr>';
+                for (let i = 0; i < data.length; ++i) {
+                    if (document.getElementById("hideDone").checked && data[i].done)
+                        continue;
+                    table += '<tr id="row' + data[i].id + '">';
+                    table += '<td>' + data[i].description + '</td>';
+                    table += '<td>' + formatDate(new Date(data[i].created)) + '</td>';
+                    table += '<td><input type="checkbox" id="done' + data[i].id + '"';
+                    table += (data[i].done ? ' checked' : '') + ' onclick="change(' + data[i].id + ')"></td>';
+                    table += '<td><button class="btn btn-success" type="button" onclick="del(' + data[i].id + ', this);"><b>x</b></button></td>';
+                    table += '</tr>';
+                }
+                document.getElementById("items").innerHTML = table;
+                document.getElementById("description").value = "";
+            }
+        )
+    }
+    function add() {
+        $.ajax({
+            type: "post",
+            url: "./ajax",
+            data: JSON.stringify({
+                "action": "add",
+                "description": $("#description").val()
+            }),
+            dataType: "json",
+            complete: function () {
+                update();
+            }
+        });
+    }
+    function change(id) {
+        $.ajax("./ajax", {
+            type: "post",
+            data: JSON.stringify({
+                "action": "update",
+                "id": id
+            }),
+            dataType: "json",
+            complete: function () {
+                update();
+            }
+        });
+    }
+    function del(id, element) {
+        $.ajax("./ajax", {
+            type: "post",
+            data: JSON.stringify({
+                "action": "delete",
+                "id": id
+            }),
+            dataType: "json",
+            complete: function () {
+                update();
+            }
+        });
+    }
+</script>
+<body>
+<div class="container">
+    <h4 style="alignment: center;">
+        TO-DO список
+    </h4>
+    <div class="input-group mb-3">
+        <div class="input-group-prepend">
+            <span class="input-group-text">Описание</span>
+        </div>
+        <input type="text" class="form-control" id="description" placeholder="Введите описание" name="description">
+        <div class="input-group-append">
+            <button type="button" class="btn btn-success" onclick="add();"><b>+</b></button>
+            <button type="button" class="btn btn-primary" onclick="update();">Обновить</button>
+        </div>
+    </div>
+    <div class="form-group form-check">
+        <label class="form-check-label">
+            <input class="form-check-input" type="checkbox" id="hideDone" onclick="update();">Скрыть выполненые
+        </label>
+    </div>
+    <table class="table table-striped" id="items"></table>
+</div>
+</body>
+</html>
