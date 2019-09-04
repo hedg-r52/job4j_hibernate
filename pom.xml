@@ -6,6 +6,8 @@
     <version>1.0</version>
     <modules>
         <module>todo</module>
+        <module>mapping-annotations</module>
+        <module>mapping-xml</module>
     </modules>
     <name>job4j_hibernate</name>
     <properties>
